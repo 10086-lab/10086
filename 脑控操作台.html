@@ -1,0 +1,1552 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>脑控操作台 · 脑机接口控制终端</title>
+<style>
+  :root {
+    --primary: #409eff;
+    --primary-dark: #337ecc;
+    --success: #67c23a;
+    --warning: #e6a23c;
+    --danger: #f56c6c;
+    --info: #6b7280;
+    --bg: #f0f2f5;
+    --card: #ffffff;
+    --border: #e4e7ed;
+    --text: #303133;
+    --text-muted: #6b7280;
+    --sidebar: #1f2d3d;
+    --sidebar-hover: #263445;
+    --sidebar-active: #409eff;
+    --font: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    font-family: var(--font);
+    font-size: 14px;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  a { text-decoration: none; color: inherit; }
+
+  .layout { display: flex; height: 100vh; overflow: hidden; }
+
+  /* 侧边栏 */
+  .sidebar {
+    width: 200px; flex-shrink: 0;
+    background: var(--sidebar); color: #c0c4cc;
+    display: flex; flex-direction: column;
+  }
+  .s-logo {
+    height: 60px; display: flex; align-items: center; padding: 0 20px;
+    color: #fff; font-size: 16px; font-weight: 700; letter-spacing: 2px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .s-logo .dot { width: 8px; height: 8px; background: var(--primary); border-radius: 2px; margin-right: 10px; }
+  .menu { flex: 1; padding: 12px 0; }
+  .menu a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 20px; font-size: 14px; color: #c0c4cc;
+    border-left: 3px solid transparent; transition: all .15s;
+  }
+  .menu a .ic { width: 16px; text-align: center; }
+  .menu a:hover { background: var(--sidebar-hover); color: #fff; }
+  .menu a.active { background: var(--sidebar-active); color: #fff; border-left-color: #fff; }
+  .s-foot { padding: 14px 20px; font-size: 12px; color: #6b7280; border-top: 1px solid rgba(255,255,255,0.08); }
+
+  /* 主区域 */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+  .topbar {
+    height: 60px; background: #fff; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; padding: 0 20px; gap: 12px;
+  }
+  .crumb { font-size: 13px; color: var(--text-muted); }
+  .crumb b { color: var(--text); font-weight: 600; }
+  .top-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+  .clock { font-size: 14px; color: var(--text); font-variant-numeric: tabular-nums; }
+  .user { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text); }
+  .user .ava {
+    width: 30px; height: 30px; border-radius: 50%; background: var(--primary);
+    color: #fff; display: flex; align-items: center; justify-content: center; font-size: 14px;
+    overflow: hidden;
+  }
+  .logout { font-size: 13px; color: var(--text-muted); cursor: pointer; margin-left: 6px; }
+  .logout:hover { color: var(--danger); }
+  .role-badge { display: inline-block; font-size: 11px; padding: 1px 8px; border-radius: 3px;
+    color: #fff; margin-left: 4px; vertical-align: middle; }
+
+  /* 登录 */
+  .login-mask {
+    position: fixed; inset: 0; z-index: 1000; background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .login-box {
+    width: 380px; background: #fff; border: 1px solid var(--border);
+    border-radius: 6px; box-shadow: 0 6px 24px rgba(0,0,0,0.10);
+    padding: 40px 36px;
+  }
+  .login-box h1 { font-size: 20px; text-align: center; color: var(--text); font-weight: 600; }
+  .login-box .sub { text-align: center; font-size: 12px; color: var(--text-muted); margin: 8px 0 28px; letter-spacing: 1px; }
+  .login-field { margin-bottom: 18px; }
+  .login-field label { display: block; font-size: 13px; margin-bottom: 8px; color: var(--text); }
+  .login-field input {
+    width: 100%; height: 38px; padding: 0 12px; border: 1px solid var(--border);
+    border-radius: 4px; font-size: 14px; outline: none; font-family: var(--font); color: var(--text);
+  }
+  .login-field input:focus { border-color: var(--primary); }
+  .login-err { color: var(--danger); font-size: 12px; min-height: 18px; margin-bottom: 6px; }
+  .login-btn { width: 100%; height: 40px; font-size: 15px; letter-spacing: 4px; }
+  .login-tip { text-align: center; font-size: 12px; color: var(--text-muted); margin-top: 18px; }
+  .form-row input[type=text], .form-row input[type=password] {
+    width: 100%; height: 36px; padding: 0 12px; border: 1px solid var(--border);
+    border-radius: 4px; font-size: 14px; outline: none; font-family: var(--font); color: var(--text);
+  }
+  .form-row input:focus { border-color: var(--primary); }
+  .form-row select {
+    width: 100%; height: 36px; padding: 0 12px; border: 1px solid var(--border);
+    border-radius: 4px; font-size: 14px; outline: none; font-family: var(--font); color: var(--text); background: #fff;
+  }
+  .form-row select:focus { border-color: var(--primary); }
+
+  /* 选项卡 */
+  .tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+  .tab { padding: 10px 18px; font-size: 14px; color: var(--text-muted); cursor: pointer;
+    border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color .15s; }
+  .tab:hover { color: var(--primary); }
+  .tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* 头像上传 */
+  .avatar-up { display: flex; align-items: center; gap: 18px; }
+  .avatar-preview {
+    width: 80px; height: 80px; border-radius: 50%; border: 1px solid var(--border);
+    background: #f5f7fa; overflow: hidden; display: flex; align-items: center; justify-content: center;
+    font-size: 30px; color: var(--text-muted); flex-shrink: 0;
+  }
+  .avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
+  .avatar-preview.square { border-radius: 4px; }
+  .avatar-up .tip { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+
+  /* 图表 */
+  .chart-wrap { margin-bottom: 16px; }
+  .chart-wrap:last-child { margin-bottom: 0; }
+  .chart-title { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+  .chart-wrap svg { width: 100%; height: 160px; display: block; background: #fafbfd;
+    border: 1px solid var(--border); border-radius: 4px; }
+
+  /* 开关 */
+  .switch { position: relative; display: inline-block; width: 40px; height: 20px; vertical-align: middle; }
+  .switch input { display: none; }
+  .switch .sl { position: absolute; cursor: pointer; inset: 0; background: #dcdfe6; border-radius: 20px; transition: .2s; }
+  .switch .sl::before { content: ""; position: absolute; width: 16px; height: 16px; left: 2px; top: 2px;
+    background: #fff; border-radius: 50%; transition: .2s; }
+  .switch input:checked + .sl { background: var(--primary); }
+  .switch input:checked + .sl::before { transform: translateX(20px); }
+  .mini-btn { display: inline-block; padding: 3px 10px; font-size: 12px; border-radius: 3px;
+    border: 1px solid var(--border); color: var(--text); cursor: pointer; background: #fff; }
+  .mini-btn:hover { color: var(--primary); border-color: var(--primary); }
+
+  .toast {
+    position: fixed; top: 72px; left: 50%; transform: translateX(-50%);
+    background: var(--success); color: #fff; padding: 9px 22px; border-radius: 4px;
+    font-size: 13px; z-index: 2000; box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+    opacity: 0; pointer-events: none; transition: opacity .3s;
+  }
+
+  .content { flex: 1; overflow: auto; padding: 20px; }
+  section.view { display: none; }
+  section.view.active { display: block; }
+
+  /* 卡片 */
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 4px;
+    margin-bottom: 16px;
+  }
+  .card-h {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; border-bottom: 1px solid var(--border);
+  }
+  .card-h .t { font-size: 14px; font-weight: 600; color: var(--text); }
+  .card-h .t::before { content: ""; display: inline-block; width: 4px; height: 14px;
+    background: var(--primary); border-radius: 2px; margin-right: 8px; vertical-align: -2px; }
+  .card-h .more { font-size: 12px; color: var(--text-muted); cursor: pointer; }
+  .card-b { padding: 16px; }
+
+  /* 统计卡片 */
+  .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 16px; }
+  .stat-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: 4px;
+    padding: 16px; display: flex; align-items: center; gap: 14px;
+  }
+  .stat-card .ico {
+    width: 44px; height: 44px; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center; font-size: 22px;
+  }
+  .stat-card .num { font-size: 22px; font-weight: 700; color: var(--text); line-height: 1.2; }
+  .stat-card .lbl { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .bg-blue { background: #ecf5ff; color: #409eff; }
+  .bg-green { background: #f0f9eb; color: #67c23a; }
+  .bg-orange { background: #fdf6ec; color: #e6a23c; }
+  .bg-red { background: #fef0f0; color: #f56c6c; }
+
+  /* 标签 */
+  .tag { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 3px; margin-right: 6px; }
+  .tag.blue { background: #ecf5ff; color: #409eff; border: 1px solid #b3d8ff; }
+  .tag.green { background: #f0f9eb; color: #67c23a; border: 1px solid #c2e7b0; }
+  .tag.red { background: #fef0f0; color: #f56c6c; border: 1px solid #fbc4c4; }
+  .tag.orange { background: #fdf6ec; color: #e6a23c; border: 1px solid #f5dab1; }
+
+  /* 进度条 */
+  .pbar { margin-bottom: 14px; }
+  .pbar .top { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; }
+  .pbar .top b { color: var(--primary); font-weight: 600; }
+  .pbar .track { height: 8px; background: #ebeef5; border-radius: 4px; overflow: hidden; }
+  .pbar .fill { height: 100%; width: 0%; background: var(--primary); border-radius: 4px; transition: width .4s; }
+  .pbar .fill.danger { background: var(--danger); }
+  .pbar .fill.success { background: var(--success); }
+
+  /* 表单/滑块 */
+  .form-row { margin-bottom: 16px; }
+  .form-row label { display: block; font-size: 13px; margin-bottom: 6px; color: var(--text); }
+  .form-row label b { color: var(--primary); float: right; }
+  input[type=range] {
+    -webkit-appearance: none; width: 100%; height: 6px; border-radius: 3px;
+    background: linear-gradient(90deg, var(--primary) var(--fill,50%), #ebeef5 var(--fill,50%));
+    outline: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%;
+    background: #fff; border: 2px solid var(--primary); cursor: pointer;
+  }
+
+  .btn { display: inline-block; padding: 8px 18px; font-size: 13px; border-radius: 4px;
+    border: 1px solid transparent; cursor: pointer; font-family: var(--font); transition: all .15s; }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-danger:hover { background: #f34c4c; }
+  .btn-plain { background: #fff; color: var(--text); border-color: var(--border); }
+  .btn-plain:hover { color: var(--primary); border-color: var(--primary); }
+  .btn-row { display: flex; gap: 10px; }
+  .btn-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .btn-grid .btn { padding: 10px 0; text-align: center; font-size: 13px; }
+
+  /* 表格 */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+  th { background: #fafafa; color: var(--text-muted); font-weight: 600; }
+  tbody tr:hover { background: #f5f7fa; }
+  td .mono { font-variant-numeric: tabular-nums; }
+
+  /* 日志 */
+  .log-list { font-size: 13px; }
+  .log-list .row { padding: 8px 0; border-bottom: 1px dashed #ebeef5; display: flex; gap: 10px; }
+  .log-list .row .time { color: var(--text-muted); flex-shrink: 0; font-variant-numeric: tabular-nums; }
+  .log-list .row .msg.ok { color: var(--success); }
+  .log-list .row .msg.warn { color: var(--warning); }
+  .log-list .row .msg.err { color: var(--danger); }
+  .log-list .row .msg.info { color: var(--info); }
+
+  /* 目标信息 */
+  .subject { display: flex; gap: 16px; align-items: center; }
+  .subject img {
+    width: 72px; height: 72px; border-radius: 4px; object-fit: cover;
+    border: 1px solid var(--border);
+  }
+  .subject .info { line-height: 1.9; font-size: 13px; }
+  .subject .info b { font-size: 15px; }
+  .subject .info .muted { color: var(--text-muted); font-size: 12px; }
+
+  canvas { width: 100%; height: 260px; display: block; background: #fff; }
+
+  footer {
+    height: 40px; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border);
+    background: #fff;
+  }
+
+  .s-foot a { color: #409eff; }
+  .data-tip { color: var(--text-muted); font-size: 12px; margin-top: 14px; }
+  .form-tight { margin-bottom: 10px; }
+  .form-tight2 { margin-bottom: 12px; }
+  .hidden { display: none; }
+  .add-form { display: none; border-bottom: 1px solid var(--border); }
+  .log-pad { padding-top: 4px; }
+  .card-flush { padding: 0; }
+  .card-pad-sm { padding: 12px; }
+  .ava-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+  .preview-img { width: 100%; height: 100%; object-fit: cover; }
+  #reportBar { width: 100%; height: 180px; display: block; }
+</style>
+</head>
+<body>
+<div class="login-mask" id="loginMask">
+  <div class="login-box">
+    <h1>脑控操作台</h1>
+    <div class="sub">脑机接口控制终端 · 身份验证</div>
+    <div class="login-field">
+      <label>账号</label>
+      <input type="text" id="loginUser" placeholder="请输入账号" autocomplete="off">
+    </div>
+    <div class="login-field">
+      <label>密码</label>
+      <input type="password" id="loginPass" placeholder="请输入密码">
+    </div>
+    <div class="login-err" id="loginErr"></div>
+    <button class="btn btn-primary login-btn" id="loginBtn">登 录</button>
+    <div class="login-tip" id="loginTip">默认账号：admin　默认密码：888888</div>
+  </div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="s-logo"><span class="dot"></span>脑控操作台</div>
+    <nav class="menu">
+      <a class="active" data-view="dashboard"><span class="ic">◈</span>控制面板</a>
+      <a data-view="report"><span class="ic">▥</span>数据统计</a>
+      <a data-view="subject"><span class="ic">◉</span>受控对象管理</a>
+      <a data-view="subjects"><span class="ic">▦</span>受控对象列表</a>
+      <a data-view="eeg"><span class="ic">∿</span>脑电波监测</a>
+      <a data-view="control"><span class="ic">⚙</span>控制指令</a>
+      <a data-view="tasks"><span class="ic">⏱</span>任务计划</a>
+      <a data-view="alert"><span class="ic">⚠</span>预警中心</a>
+      <a data-view="audit"><span class="ic">⌁</span>操作审计</a>
+      <a data-view="records"><span class="ic">▣</span>实验档案</a>
+      <a data-view="log"><span class="ic">▤</span>运行日志</a>
+      <a data-view="users"><span class="ic">☰</span>成员管理</a>
+      <a data-view="sysinfo"><span class="ic">ℹ</span>系统信息</a>
+      <a data-view="account"><span class="ic">☺</span>系统设置</a>
+    </nav>
+    <div class="s-foot">v2.4.1 · 内网专版<br><a href="index.html">返回联合研究门户</a></div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div class="crumb">首页 / <b id="crumb">控制面板</b></div>
+      <div class="top-right">
+        <div class="clock" id="clock">00:00:00</div>
+        <div class="user"><span class="ava" id="avaName">孙</span><span id="displayName">孙笑川博士</span><span class="role-badge" id="roleBadge">超级管理员</span> <a class="logout" id="logout">退出登录</a></div>
+      </div>
+    </header>
+
+    <div class="content">
+      <!-- 控制面板 -->
+      <section class="view active" id="view-dashboard">
+        <div class="stat-row">
+          <div class="stat-card">
+            <div class="ico bg-green">●</div>
+            <div><div class="num">在线</div><div class="lbl">神经端口连接</div></div>
+          </div>
+          <div class="stat-card">
+            <div class="ico bg-blue">◈</div>
+            <div><div class="num" id="stat-link">72%</div><div class="lbl">神经链接强度</div></div>
+          </div>
+          <div class="stat-card">
+            <div class="ico bg-orange">⚠</div>
+            <div><div class="num" id="stat-cover">38%</div><div class="lbl">意识覆盖进度</div></div>
+          </div>
+          <div class="stat-card">
+            <div class="ico bg-red">◉</div>
+            <div><div class="num">警戒</div><div class="lbl">反制监测状态</div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-h"><span class="t">受控对象概览</span><span class="more">查看详情 »</span></div>
+          <div class="card-b">
+            <div class="subject">
+              <img id="subjAvatar1" src="756432417ce918bd3bba432ce0f000d4.jpg" alt="李文亚">
+              <div class="info">
+                <b id="subjName1">李文亚</b>&nbsp;&nbsp;<span class="tag green">已锁定</span><span class="tag blue">信号稳定</span><br>
+                <span class="muted">编号：NO.007 · 身份保密</span><br>
+                <span class="muted">实验批次：BATCH-2026-08 · 状态：受控中</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-h"><span class="t">实时告警</span><span class="more" id="warnCount">0 条</span></div>
+          <div class="card-b log-pad">
+            <div class="log-list" id="warnList"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-h"><span class="t">控制趋势</span><span class="more">近 24 次采样</span></div>
+          <div class="card-b">
+            <div class="chart-wrap">
+              <div class="chart-title">意识覆盖进度（%）</div>
+              <svg id="chartCover" viewBox="0 0 600 160" preserveAspectRatio="none"></svg>
+            </div>
+            <div class="chart-wrap">
+              <div class="chart-title">神经链接强度（%）</div>
+              <svg id="chartLink" viewBox="0 0 600 160" preserveAspectRatio="none"></svg>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 受控对象管理 -->
+      <section class="view" id="view-subject">
+        <div class="card">
+          <div class="card-h"><span class="t">对象档案</span><span class="more">编辑 »</span></div>
+          <div class="card-b">
+            <div class="subject">
+              <img id="subjAvatar2" src="756432417ce918bd3bba432ce0f000d4.jpg" alt="李文亚">
+              <div class="info">
+                <b id="subjName2">李文亚</b>&nbsp;&nbsp;<span class="tag green">已锁定</span><span class="tag blue">信号稳定</span><br>
+                <span class="muted">编号：NO.007 · 身份保密</span><br>
+                <span class="muted">实验批次：BATCH-2026-08</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-h"><span class="t">链接状态</span></div>
+          <div class="card-b">
+            <div class="pbar">
+              <div class="top"><span>神经链接强度</span><b id="linkV">72%</b></div>
+              <div class="track"><div class="fill success" id="linkBar"></div></div>
+            </div>
+            <div class="pbar">
+              <div class="top"><span>意识覆盖进度</span><b id="coverV">38%</b></div>
+              <div class="track"><div class="fill danger" id="coverBar"></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-h"><span class="t">生理监测指标</span></div>
+          <div class="card-b card-flush">
+            <table>
+              <thead><tr><th>指标</th><th>数值</th><th>状态</th></tr></thead>
+              <tbody>
+                <tr><td>脑电波频率</td><td class="mono" id="freq2">θ 4.2Hz</td><td><span class="tag blue">正常</span></td></tr>
+                <tr><td>心率</td><td class="mono">72 bpm</td><td><span class="tag green">平稳</span></td></tr>
+                <tr><td>意识活跃度</td><td class="mono">41%</td><td><span class="tag orange">偏高</span></td></tr>
+                <tr><td>情绪波动</td><td class="mono">中</td><td><span class="tag red">警戒</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 脑电波监测 -->
+      <section class="view" id="view-eeg">
+        <div class="card">
+          <div class="card-h"><span class="t">实时脑电波</span><span class="more" id="freq">θ 4.2Hz</span></div>
+          <div class="card-b card-pad-sm">
+            <canvas id="eeg"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-h"><span class="t">波段说明</span></div>
+          <div class="card-b">
+            <table>
+              <thead><tr><th>波段</th><th>频率范围</th><th>当前状态</th></tr></thead>
+              <tbody>
+                <tr><td>δ (Delta)</td><td class="mono">0.5–4 Hz</td><td>深度睡眠</td></tr>
+                <tr><td>θ (Theta)</td><td class="mono">4–8 Hz</td><td><span class="tag orange">活跃</span></td></tr>
+                <tr><td>α (Alpha)</td><td class="mono">8–13 Hz</td><td>放松</td></tr>
+                <tr><td>β (Beta)</td><td class="mono">13–30 Hz</td><td><span class="tag blue">监测中</span></td></tr>
+                <tr><td>γ (Gamma)</td><td class="mono">30+ Hz</td><td><span class="tag red">异常</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 控制指令 -->
+      <section class="view" id="view-control">
+        <div class="card">
+          <div class="card-h"><span class="t">控制参数调节</span></div>
+          <div class="card-b">
+            <div class="form-row">
+              <label>意识控制 <b id="s1v">50</b></label>
+              <input type="range" id="s1" min="0" max="100" value="50">
+            </div>
+            <div class="form-row">
+              <label>记忆覆盖 <b id="s2v">30</b></label>
+              <input type="range" id="s2" min="0" max="100" value="30">
+            </div>
+            <div class="form-row">
+              <label>情绪压制 <b id="s3v">40</b></label>
+              <input type="range" id="s3" min="0" max="100" value="40">
+            </div>
+            <div class="btn-row">
+              <button class="btn btn-primary" id="exec">执行指令</button>
+              <button class="btn btn-danger" id="erase">抹除记忆</button>
+              <button class="btn btn-plain" id="reset">重置</button>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-h"><span class="t">高级控制功能</span><span class="more">仅供授权人员使用</span></div>
+          <div class="card-b">
+            <div class="btn-grid">
+              <button class="btn btn-danger" data-fn="封禁社交平台账号">封禁社交账号</button>
+              <button class="btn btn-danger" data-fn="冻结银行账户">冻结银行账户</button>
+              <button class="btn btn-primary" data-fn="清空通讯录">清空通讯录</button>
+              <button class="btn btn-primary" data-fn="植入虚假记忆">植入虚假记忆</button>
+              <button class="btn btn-primary" data-fn="远程定位追踪">远程定位追踪</button>
+              <button class="btn btn-primary" data-fn="窃取隐私数据">窃取隐私数据</button>
+              <button class="btn btn-primary" data-fn="修改身份信息">修改身份信息</button>
+              <button class="btn btn-danger" data-fn="强制意识休眠">强制意识休眠</button>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-h"><span class="t">执行记录</span></div>
+          <div class="card-b log-pad">
+            <div class="log-list" id="execList"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 运行日志 -->
+      <section class="view" id="view-log">
+        <div class="card">
+          <div class="card-h"><span class="t">运行日志</span><span class="more">导出 »</span></div>
+          <div class="card-b log-pad">
+            <div class="log-list" id="logList"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 受控对象列表 -->
+      <section class="view" id="view-subjects">
+        <div class="card">
+          <div class="card-h"><span class="t">受控对象列表</span><span class="more" id="subjCount">共 0 人</span></div>
+          <div class="card-b card-flush">
+            <table>
+              <thead><tr><th>编号</th><th>姓名</th><th>状态</th><th>链接强度</th><th>意识覆盖</th><th>操作</th></tr></thead>
+              <tbody id="subjectsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 任务计划 -->
+      <section class="view" id="view-tasks">
+        <div class="card">
+          <div class="card-h"><span class="t">定时任务</span><span class="more">共 <span id="taskCount">0</span> 项</span></div>
+          <div class="card-b card-flush">
+            <table>
+              <thead><tr><th>任务名称</th><th>执行周期</th><th>状态</th><th>上次执行</th><th>操作</th></tr></thead>
+              <tbody id="taskBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 操作审计 -->
+      <section class="view" id="view-audit">
+        <div class="card">
+          <div class="card-h"><span class="t">操作审计</span><span class="more">敏感操作留痕</span></div>
+          <div class="card-b card-flush">
+            <table>
+              <thead><tr><th>时间</th><th>操作人</th><th>等级</th><th>操作内容</th><th>结果</th></tr></thead>
+              <tbody id="auditBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 系统信息 -->
+      <section class="view" id="view-sysinfo">
+        <div class="card">
+          <div class="card-h"><span class="t">系统信息</span></div>
+          <div class="card-b card-flush">
+            <table>
+              <tbody>
+                <tr><td>系统版本</td><td>脑控操作台 v2.4.1</td></tr>
+                <tr><td>运行时长</td><td class="mono" id="uptime">—</td></tr>
+                <tr><td>主机地址</td><td>192.168.1.100（内网）</td></tr>
+                <tr><td>数据库状态</td><td><span class="tag green">正常</span></td></tr>
+                <tr><td>神经链路</td><td><span class="tag green">已连接</span></td></tr>
+                <tr><td>当前用户</td><td id="sysUser">—</td></tr>
+                <tr><td>权限等级</td><td id="sysRole">—</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-h"><span class="t">资源占用</span></div>
+          <div class="card-b">
+            <div class="pbar"><div class="top"><span>CPU 占用</span><b id="cpuV">23%</b></div><div class="track"><div class="fill" id="cpuBar"></div></div></div>
+            <div class="pbar"><div class="top"><span>内存占用</span><b id="memV">56%</b></div><div class="track"><div class="fill success" id="memBar"></div></div></div>
+            <div class="pbar"><div class="top"><span>带宽占用</span><b id="netV">31%</b></div><div class="track"><div class="fill danger" id="netBar"></div></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 数据统计 -->
+      <section class="view" id="view-report">
+        <div class="stat-row">
+          <div class="stat-card"><div class="ico bg-blue">◈</div><div><div class="num" id="rp-ops">0</div><div class="lbl">今日操作次数</div></div></div>
+          <div class="stat-card"><div class="ico bg-green">●</div><div><div class="num" id="rp-subj">4</div><div class="lbl">受控对象总数</div></div></div>
+          <div class="stat-card"><div class="ico bg-orange">⚠</div><div><div class="num" id="rp-alert">0</div><div class="lbl">告警总数</div></div></div>
+          <div class="stat-card"><div class="ico bg-red">◉</div><div><div class="num" id="rp-cover">38%</div><div class="lbl">平均意识覆盖</div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-h"><span class="t">近 7 天操作统计</span><span class="more">单位：次</span></div>
+          <div class="card-b"><svg id="reportBar" viewBox="0 0 600 180" preserveAspectRatio="none"></svg></div>
+        </div>
+        <div class="card">
+          <div class="card-h"><span class="t">统计报表</span><span class="more">导出 »</span></div>
+          <div class="card-b card-flush">
+            <table>
+              <thead><tr><th>日期</th><th>操作次数</th><th>告警数</th><th>平均覆盖</th><th>实验批次</th></tr></thead>
+              <tbody id="reportBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 预警中心 -->
+      <section class="view" id="view-alert">
+        <div class="stat-row">
+          <div class="stat-card"><div class="ico bg-red">◉</div><div><div class="num" id="al-crit">0</div><div class="lbl">严重</div></div></div>
+          <div class="stat-card"><div class="ico bg-orange">⚠</div><div><div class="num" id="al-warn">0</div><div class="lbl">警告</div></div></div>
+          <div class="stat-card"><div class="ico bg-blue">ℹ</div><div><div class="num" id="al-info">0</div><div class="lbl">提示</div></div></div>
+          <div class="stat-card"><div class="ico bg-green">●</div><div><div class="num" id="al-total">0</div><div class="lbl">总计</div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-h"><span class="t">预警列表</span><span class="more"><a class="mini-btn" id="btnClearAlerts">全部标记已处理</a></span></div>
+          <div class="card-b card-flush">
+            <table>
+              <thead><tr><th>时间</th><th>级别</th><th>预警内容</th><th>状态</th><th>操作</th></tr></thead>
+              <tbody id="alertBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 实验档案 -->
+      <section class="view" id="view-records">
+        <div class="card">
+          <div class="card-h"><span class="t">实验档案库</span><span class="more">共 <span id="recCount">0</span> 条</span></div>
+          <div class="card-b card-flush">
+            <table>
+              <thead><tr><th>批次号</th><th>对象</th><th>实验类型</th><th>开始时间</th><th>状态</th><th>操作</th></tr></thead>
+              <tbody id="recBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 成员管理 -->
+      <section class="view" id="view-users">
+        <div class="card">
+          <div class="card-h"><span class="t">成员列表</span><span class="more"><a class="mini-btn" id="btnAddUser">+ 添加成员</a></span></div>
+          <div class="card-b add-form" id="addUserForm">
+            <div class="form-row form-tight"><label>账号</label><input type="text" id="newUser"></div>
+            <div class="form-row form-tight"><label>姓名</label><input type="text" id="newName"></div>
+            <div class="form-row form-tight2"><label>权限等级</label>
+              <select id="newRole"><option value="superadmin">超级管理员</option><option value="admin">高级操作员</option><option value="operator" selected>普通操作员</option></select>
+            </div>
+            <div class="btn-row">
+              <button class="btn btn-primary" id="confirmAddUser">确定添加</button>
+              <button class="btn btn-plain" id="cancelAddUser">取消</button>
+            </div>
+          </div>
+          <div class="card-b card-flush">
+            <table>
+              <thead><tr><th>账号</th><th>姓名</th><th>权限等级</th><th>状态</th><th>操作</th></tr></thead>
+              <tbody id="userBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 系统设置 -->
+      <section class="view" id="view-account">
+        <div class="card">
+          <div class="card-h"><span class="t">系统设置</span><span class="more">保存后生效</span></div>
+          <div class="card-b">
+            <div class="tabs">
+              <a class="tab active" data-tab="profile">基本资料</a>
+              <a class="tab" data-tab="account">账号安全</a>
+              <a class="tab" data-tab="subject">受控对象</a>
+              <a class="tab" data-tab="data">数据管理</a>
+            </div>
+
+            <div class="tab-panel active" id="tab-profile">
+              <div class="form-row">
+                <label>显示名称</label>
+                <input type="text" id="setName" placeholder="请输入显示名称">
+              </div>
+              <div class="form-row">
+                <label>账号等级 / 权限</label>
+                <select id="setRole">
+                  <option value="superadmin">超级管理员（全部权限）</option>
+                  <option value="admin">高级操作员（操作权限）</option>
+                  <option value="operator">普通操作员（基础权限）</option>
+                </select>
+              </div>
+              <div class="form-row">
+                <label>用户头像</label>
+                <div class="avatar-up">
+                  <div class="avatar-preview" id="userAvatarPreview">孙</div>
+                  <div>
+                    <button class="btn btn-primary" id="btnUserAvatar">选择图片</button>
+                    <input type="file" id="userAvatarInput" accept="image/*" class="hidden">
+                    <div class="tip">支持 JPG/PNG，点击选择本地图片作为登录头像</div>
+                  </div>
+                </div>
+              </div>
+              <div class="btn-row">
+                <button class="btn btn-primary" id="saveProfile">保存基本资料</button>
+              </div>
+            </div>
+
+            <div class="tab-panel" id="tab-account">
+              <div class="form-row">
+                <label>登录账号</label>
+                <input type="text" id="setUser" placeholder="请输入新账号">
+              </div>
+              <div class="form-row">
+                <label>新密码</label>
+                <input type="password" id="setPass" placeholder="请输入新密码（留空则不修改）">
+              </div>
+              <div class="form-row">
+                <label>确认新密码</label>
+                <input type="password" id="setPass2" placeholder="请再次输入新密码">
+              </div>
+              <div class="login-err" id="setErr"></div>
+              <div class="btn-row">
+                <button class="btn btn-primary" id="saveAccount">保存账号安全</button>
+                <button class="btn btn-plain" id="resetAccount">恢复默认</button>
+              </div>
+            </div>
+
+            <div class="tab-panel" id="tab-subject">
+              <div class="form-row">
+                <label>受控对象姓名</label>
+                <input type="text" id="setSubjName" placeholder="请输入受控对象姓名">
+              </div>
+              <div class="form-row">
+                <label>受控对象头像</label>
+                <div class="avatar-up">
+                  <div class="avatar-preview square" id="subjAvatarPreview"></div>
+                  <div>
+                    <button class="btn btn-primary" id="btnSubjAvatar">选择图片</button>
+                    <input type="file" id="subjAvatarInput" accept="image/*" class="hidden">
+                    <div class="tip">点击选择本地图片作为受控对象头像</div>
+                  </div>
+                </div>
+              </div>
+              <div class="btn-row">
+                <button class="btn btn-primary" id="saveSubject">保存受控对象</button>
+              </div>
+            </div>
+
+            <div class="tab-panel" id="tab-data">
+              <div class="btn-row">
+                <button class="btn btn-primary" id="btnExport">导出配置备份</button>
+                <button class="btn btn-primary" id="btnImport">导入配置备份</button>
+                <input type="file" id="importFile" accept="application/json" class="hidden">
+                <button class="btn btn-danger" id="btnClear">清除所有数据</button>
+              </div>
+              <div class="tip data-tip">
+                导出/导入将包含账号、密码、权限等级、受控对象及头像等全部本地配置。
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <footer>武汉大学 · 孙笑川博士 联合研发 &nbsp;|&nbsp; 10086研究所 × X114514研究所 &nbsp;|&nbsp; 版权所有 © 2026</footer>
+  </div>
+</div>
+
+<script>
+  // 登录与账号配置
+  const loginMask = document.getElementById('loginMask');
+  const loginUser = document.getElementById('loginUser');
+  const loginPass = document.getElementById('loginPass');
+  const loginErr = document.getElementById('loginErr');
+  const loginTip = document.getElementById('loginTip');
+  const KEY = 'nc_logged';
+
+  function getCfg() {
+    return {
+      user: localStorage.getItem('nc_user') || 'admin',
+      pass: localStorage.getItem('nc_pass') || '888888',
+      name: localStorage.getItem('nc_name') || '孙笑川博士',
+      avatar: localStorage.getItem('nc_avatar') || '',
+      role: localStorage.getItem('nc_role') || 'superadmin'
+    };
+  }
+  const ROLES = {
+    superadmin: { name: '超级管理员', color: '#f56c6c', level: 3 },
+    admin: { name: '高级操作员', color: '#409eff', level: 2 },
+    operator: { name: '普通操作员', color: '#6b7280', level: 1 }
+  };
+  function roleLevel() {
+    const r = ROLES[getCfg().role];
+    return r ? r.level : 1;
+  }
+  function checkPerm(need, label) {
+    if (roleLevel() < need) { toast('权限不足：需要「' + label + '」', '#f56c6c'); return false; }
+    return true;
+  }
+  function getSubjectCfg() {
+    return {
+      name: localStorage.getItem('nc_subj_name') || '李文亚',
+      avatar: localStorage.getItem('nc_subj_avatar') || '756432417ce918bd3bba432ce0f000d4.jpg'
+    };
+  }
+  function applyName() {
+    const cfg = getCfg();
+    document.getElementById('displayName').textContent = cfg.name;
+    const ava = document.getElementById('avaName');
+    if (cfg.avatar) {
+      ava.innerHTML = '<img class="ava-img" src="' + cfg.avatar + '" alt="用户头像">';
+      ava.style.background = 'transparent';
+    } else {
+      ava.textContent = cfg.name.charAt(0) || '孙';
+      ava.style.background = 'var(--primary)';
+    }
+    const r = ROLES[cfg.role] || ROLES.operator;
+    const badge = document.getElementById('roleBadge');
+    badge.textContent = r.name;
+    badge.style.background = r.color;
+    const su = document.getElementById('sysUser');
+    const sr = document.getElementById('sysRole');
+    if (su) su.textContent = cfg.name;
+    if (sr) sr.textContent = r.name;
+    loginTip.textContent = '账号：' + cfg.user + '　密码：' + cfg.pass;
+  }
+  function applySubject() {
+    const s = getSubjectCfg();
+    document.getElementById('subjName1').textContent = s.name;
+    document.getElementById('subjName2').textContent = s.name;
+    document.getElementById('subjAvatar1').src = s.avatar;
+    document.getElementById('subjAvatar2').src = s.avatar;
+  }
+  function showLogin() { loginMask.style.display = 'flex'; }
+  function hideLogin() { loginMask.style.display = 'none'; }
+  function doLogin() {
+    const cfg = getCfg();
+    if (loginUser.value.trim() === cfg.user && loginPass.value === cfg.pass) {
+      localStorage.setItem(KEY, '1');
+      loginErr.textContent = '';
+      hideLogin();
+      audit('登录系统', true);
+    } else {
+      loginErr.textContent = '账号或密码错误';
+    }
+  }
+  document.getElementById('loginBtn').addEventListener('click', doLogin);
+  loginPass.addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+  document.getElementById('logout').addEventListener('click', () => {
+    audit('退出登录', true);
+    localStorage.removeItem(KEY);
+    loginPass.value = '';
+    showLogin();
+  });
+  applyName();
+  applySubject();
+  if (localStorage.getItem(KEY) === '1') hideLogin(); else showLogin();
+
+  // 系统设置
+  const setName = document.getElementById('setName');
+  const setUser = document.getElementById('setUser');
+  const setPass = document.getElementById('setPass');
+  const setPass2 = document.getElementById('setPass2');
+  const setErr = document.getElementById('setErr');
+  const setSubjName = document.getElementById('setSubjName');
+  const setRole = document.getElementById('setRole');
+
+  function toast(msg, color) {
+    let t = document.getElementById('toast');
+    if (!t) { t = document.createElement('div'); t.id = 'toast'; t.className = 'toast'; document.body.appendChild(t); }
+    t.textContent = msg;
+    t.style.background = color || '#67c23a';
+    t.style.opacity = '1';
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => { t.style.opacity = '0'; }, 2000);
+  }
+  function renderAvatarPreview(el, src, fallback) {
+    if (src) {
+      el.innerHTML = '<img class="preview-img" src="' + src + '" alt="头像预览">';
+    } else {
+      el.textContent = fallback;
+    }
+  }
+  function fillAccountForm() {
+    const cfg = getCfg();
+    const s = getSubjectCfg();
+    setName.value = cfg.name;
+    setUser.value = cfg.user;
+    setPass.value = '';
+    setPass2.value = '';
+    setErr.textContent = '';
+    setSubjName.value = s.name;
+    setRole.value = cfg.role;
+    renderAvatarPreview(document.getElementById('userAvatarPreview'), cfg.avatar, cfg.name.charAt(0) || '孙');
+    renderAvatarPreview(document.getElementById('subjAvatarPreview'), s.avatar, '');
+  }
+
+  // 选项卡切换
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(x => x.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+    });
+  });
+
+  // 头像上传
+  document.getElementById('btnUserAvatar').addEventListener('click', () => document.getElementById('userAvatarInput').click());
+  document.getElementById('userAvatarInput').addEventListener('change', e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = () => renderAvatarPreview(document.getElementById('userAvatarPreview'), r.result, '');
+    r.readAsDataURL(f);
+  });
+  document.getElementById('btnSubjAvatar').addEventListener('click', () => document.getElementById('subjAvatarInput').click());
+  document.getElementById('subjAvatarInput').addEventListener('change', e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = () => renderAvatarPreview(document.getElementById('subjAvatarPreview'), r.result, '');
+    r.readAsDataURL(f);
+  });
+
+  function saveAvatar(key, previewId, errMsg) {
+    const img = document.querySelector('#' + previewId + ' img');
+    if (!img) return;
+    try { localStorage.setItem(key, img.src); }
+    catch (e) { toast(errMsg, '#f56c6c'); }
+  }
+
+  // 保存基本资料（显示名称 + 用户头像 + 等级）
+  document.getElementById('saveProfile').addEventListener('click', () => {
+    const name = setName.value.trim();
+    if (!name) { toast('显示名称不能为空', '#f56c6c'); return; }
+    localStorage.setItem('nc_name', name);
+    localStorage.setItem('nc_role', setRole.value);
+    saveAvatar('nc_avatar', 'userAvatarPreview', '头像图片过大，未能保存');
+    applyName();
+    fillAccountForm();
+    audit('修改基本资料', true);
+    toast('基本资料已保存');
+    log('基本资料已更新（显示名称/头像/权限等级）', 'ok');
+  });
+
+  // 保存账号安全（账号 + 密码）
+  document.getElementById('saveAccount').addEventListener('click', () => {
+    const user = setUser.value.trim();
+    const pass = setPass.value;
+    if (!user) { setErr.textContent = '登录账号不能为空'; return; }
+    if (pass && pass !== setPass2.value) { setErr.textContent = '两次输入的密码不一致'; return; }
+    localStorage.setItem('nc_user', user);
+    if (pass) localStorage.setItem('nc_pass', pass);
+    setErr.textContent = '';
+    applyName();
+    fillAccountForm();
+    audit('修改账号安全', true);
+    toast('账号安全设置已保存');
+    log('账号/密码已更新', 'ok');
+  });
+
+  // 保存受控对象（姓名 + 头像）
+  document.getElementById('saveSubject').addEventListener('click', () => {
+    const name = setSubjName.value.trim();
+    if (!name) { toast('受控对象姓名不能为空', '#f56c6c'); return; }
+    localStorage.setItem('nc_subj_name', name);
+    saveAvatar('nc_subj_avatar', 'subjAvatarPreview', '头像图片过大，未能保存');
+    applySubject();
+    fillAccountForm();
+    audit('修改受控对象', true);
+    toast('受控对象信息已保存');
+    log('受控对象信息已更新', 'ok');
+  });
+
+  // 恢复默认
+  document.getElementById('resetAccount').addEventListener('click', () => {
+    if (!checkPerm(3, '超级管理员')) return;
+    localStorage.removeItem('nc_name');
+    localStorage.removeItem('nc_user');
+    localStorage.removeItem('nc_pass');
+    localStorage.removeItem('nc_avatar');
+    localStorage.removeItem('nc_role');
+    localStorage.removeItem('nc_subj_name');
+    localStorage.removeItem('nc_subj_avatar');
+    applyName();
+    applySubject();
+    fillAccountForm();
+    audit('恢复默认设置', true);
+    toast('已恢复默认设置');
+    log('系统设置已恢复为默认值', 'warn');
+  });
+
+  fillAccountForm();
+
+  // 时钟
+  function tick() {
+    const d = new Date();
+    document.getElementById('clock').textContent =
+      [d.getHours(), d.getMinutes(), d.getSeconds()].map(n => String(n).padStart(2,'0')).join(':');
+  }
+  setInterval(tick, 1000); tick();
+
+  // 菜单切换
+  const views = {
+    dashboard: '控制面板',
+    report: '数据统计',
+    subject: '受控对象管理',
+    subjects: '受控对象列表',
+    eeg: '脑电波监测',
+    control: '控制指令',
+    tasks: '任务计划',
+    alert: '预警中心',
+    audit: '操作审计',
+    records: '实验档案',
+    log: '运行日志',
+    users: '成员管理',
+    sysinfo: '系统信息',
+    account: '系统设置'
+  };
+  const menuLinks = document.querySelectorAll('.menu a');
+  menuLinks.forEach(a => {
+    a.addEventListener('click', () => {
+      menuLinks.forEach(x => x.classList.remove('active'));
+      a.classList.add('active');
+      document.querySelectorAll('section.view').forEach(s => s.classList.remove('active'));
+      document.getElementById('view-' + a.dataset.view).classList.add('active');
+      document.getElementById('crumb').textContent = views[a.dataset.view];
+      if (a.dataset.view === 'eeg') resize();
+    });
+  });
+
+  // 脑电波
+  const c = document.getElementById('eeg');
+  const ctx = c.getContext('2d');
+  let waveData = Array(160).fill(0);
+  let amp = 0.5, phase = 0;
+
+  function resize() {
+    if (c.clientWidth === 0) return;
+    c.width = c.clientWidth * 2;
+    c.height = c.clientHeight * 2;
+  }
+  window.addEventListener('resize', resize);
+
+  function drawWave() {
+    if (c.width === 0) return;
+    const w = c.width, h = c.height;
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, w, h);
+    ctx.strokeStyle = '#f0f2f5';
+    ctx.lineWidth = 1;
+    for (let y = 1; y < 5; y++) {
+      ctx.beginPath(); ctx.moveTo(0, h*y/5); ctx.lineTo(w, h*y/5); ctx.stroke();
+    }
+    phase += 0.05 + amp * 0.03;
+    waveData.push(Math.sin(phase) * amp + (Math.random()-0.5)*0.35);
+    waveData.shift();
+    ctx.strokeStyle = '#409eff';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    waveData.forEach((v, i) => {
+      const x = i / waveData.length * w;
+      const y = h/2 + v * h/3;
+      i === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    });
+    ctx.stroke();
+    requestAnimationFrame(drawWave);
+  }
+  drawWave();
+
+  // 滑块
+  const sliders = [['s1','s1v'], ['s2','s2v'], ['s3','s3v']];
+  sliders.forEach(([id, vid]) => {
+    const el = document.getElementById(id);
+    const paint = () => {
+      el.style.setProperty('--fill', el.value + '%');
+      document.getElementById(vid).textContent = el.value;
+      amp = 0.2 + (parseInt(el.value)/100) * 1.3;
+      const f = (3 + el.value/100*9).toFixed(1);
+      document.getElementById('freq').textContent = f + 'Hz';
+      document.getElementById('freq2').textContent = 'θ ' + f + 'Hz';
+    };
+    el.addEventListener('input', paint);
+    paint();
+  });
+
+  // 日志系统
+  const logList = document.getElementById('logList');
+  const warnList = document.getElementById('warnList');
+  const execList = document.getElementById('execList');
+  let warnCount = 0;
+  const alertList = [];
+
+  function addLog(target, msg, cls) {
+    const row = document.createElement('div');
+    row.className = 'row fade';
+    const t = new Date().toTimeString().slice(0,8);
+    row.innerHTML = `<span class="time">${t}</span><span class="msg ${cls}">${msg}</span>`;
+    target.prepend(row);
+    while (target.children.length > 40) target.removeChild(target.lastChild);
+  }
+  function log(msg, cls) { addLog(logList, msg, cls); }
+  function warn(msg, cls) {
+    addLog(warnList, msg, cls);
+    warnCount++;
+    document.getElementById('warnCount').textContent = warnCount + ' 条';
+    alertList.unshift({ t: new Date().toTimeString().slice(0,8), level: cls === 'err' ? '严重' : '警告', msg: msg.replace('⚠ ', ''), done: false });
+    if (alertList.length > 50) alertList.pop();
+    renderAlerts();
+  }
+
+  // 操作审计
+  const auditList = [];
+  function renderAudit() {
+    const b = document.getElementById('auditBody');
+    b.innerHTML = auditList.map(a =>
+      '<tr><td class="mono">' + a.t + '</td><td>' + a.user + '</td>' +
+      '<td><span class="tag blue">' + a.role + '</span></td><td>' + a.action + '</td>' +
+      '<td>' + (a.ok ? '<span class="tag green">成功</span>' : '<span class="tag red">失败</span>') + '</td></tr>'
+    ).join('');
+  }
+  function audit(action, ok) {
+    const cfg = getCfg();
+    const r = ROLES[cfg.role] || ROLES.operator;
+    auditList.push({ t: new Date().toTimeString().slice(0,8), user: cfg.name, role: r.name, action, ok });
+    if (auditList.length > 50) auditList.shift();
+    renderAudit();
+  }
+
+  const logs = [
+    ['系统初始化完成', 'ok'],
+    ['神经端口已连接 受控对象 李文亚', 'ok'],
+    ['脑电波同步锁定', 'ok'],
+    ['正在建立深层意识桥接...', 'info'],
+    ['意识防火墙检测到微弱抵抗', 'warn'],
+    ['反制监测: 目标情绪波动升高', 'warn']
+  ];
+  logs.forEach(l => log(l[0], l[1]));
+  warn('目标意识出现异常波动', 'err');
+  warn('检测到情感锚点干扰', 'warn');
+
+  const warnQueue = [
+    ['记忆封锁区出现裂缝', 'err'],
+    ['目标尝试唤醒自我保护机制', 'err'],
+    ['反制信号增强中...', 'warn'],
+    ['目标意识出现异常波动', 'err']
+  ];
+  let wi = 0;
+  setInterval(() => warn(warnQueue[wi++ % warnQueue.length], warnQueue[wi % warnQueue.length] === 'err' ? 'err' : 'warn'), 5000);
+
+  // 进度
+  const coverBar = document.getElementById('coverBar');
+  const coverV = document.getElementById('coverV');
+  const linkBar = document.getElementById('linkBar');
+  const linkV = document.getElementById('linkV');
+  const statLink = document.getElementById('stat-link');
+  const statCover = document.getElementById('stat-cover');
+  let cover = 38, link = 72;
+
+  function setCover(v) {
+    cover = Math.max(0, Math.min(100, v));
+    coverBar.style.width = cover + '%'; coverV.textContent = cover + '%';
+    statCover.textContent = cover + '%';
+  }
+  function setLink(v) {
+    link = Math.max(0, Math.min(100, v));
+    linkBar.style.width = link + '%'; linkV.textContent = link + '%';
+    statLink.textContent = link + '%';
+  }
+  setCover(cover);
+  setLink(link);
+
+  const execMsgs = [
+    ['指令注入成功，目标进入服从态', 'ok'],
+    ['意识覆盖推进 8%', 'ok'],
+    ['目标神经元响应良好', 'ok'],
+    ['检测到微弱抗拒，已压制', 'warn'],
+    ['深层记忆写入中...', 'info']
+  ];
+  let ei = 0;
+
+  document.getElementById('exec').addEventListener('click', () => {
+    setCover(cover + 8);
+    setLink(link + 3);
+    recordOp();
+    const m = execMsgs[ei++ % execMsgs.length];
+    log(m[0], m[1]);
+    addLog(execList, m[0], m[1]);
+  });
+
+  document.getElementById('erase').addEventListener('click', () => {
+    if (!checkPerm(2, '高级操作员')) { audit('抹除记忆', false); return; }
+    audit('抹除记忆', true);
+    recordOp();
+    log('启动记忆抹除程序...', 'err');
+    addLog(execList, '启动记忆抹除程序...', 'err');
+    setTimeout(() => { log('记忆区块格式化完成', 'err'); addLog(execList, '记忆区块格式化完成', 'err'); }, 800);
+    setTimeout(() => warn('目标人格完整性受损', 'err'), 1500);
+    setCover(cover + 12);
+  });
+
+  document.getElementById('reset').addEventListener('click', () => {
+    setCover(0); setLink(0);
+    log('系统已重置，连接断开', 'warn');
+    addLog(execList, '系统已重置，连接断开', 'warn');
+    warn('目标意识已脱离控制', 'err');
+  });
+
+  // 高级控制功能
+  const fnResults = {
+    '封禁社交平台账号': ['已封禁目标全部社交平台账号（微信/微博/抖音/QQ）', 'err'],
+    '冻结银行账户': ['目标名下银行账户已全部冻结', 'err'],
+    '清空通讯录': ['目标通讯录数据已清空', 'ok'],
+    '植入虚假记忆': ['虚假记忆已写入，覆盖原记忆区块', 'warn'],
+    '远程定位追踪': ['已锁定目标实时位置，持续追踪中', 'ok'],
+    '窃取隐私数据': ['已下载目标私密数据至本地服务器', 'warn'],
+    '修改身份信息': ['目标身份信息已改写，原始档案封存', 'warn'],
+    '强制意识休眠': ['目标意识已强制休眠，进入深度昏迷', 'err']
+  };
+  document.querySelectorAll('[data-fn]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (!checkPerm(2, '高级操作员')) { audit('高级功能：' + btn.dataset.fn, false); return; }
+      const name = btn.dataset.fn;
+      const [msg, cls] = fnResults[name];
+      log(`[指令] ${name}：${msg}`, cls);
+      addLog(execList, `[指令] ${name}：${msg}`, cls);
+      audit('高级功能：' + name, true);
+      recordOp();
+      setCover(cover + 6);
+    });
+  });
+
+  // 目标随机动作
+  const subjectLogs = [
+    ['目标瞳孔收缩，呼吸频率上升', 'warn'],
+    ['目标潜意识抵抗增强', 'err'],
+    ['脑电波出现 γ 波段异常', 'warn'],
+    ['目标进入深度沉睡状态', 'ok']
+  ];
+  let si = 0;
+  setInterval(() => log(subjectLogs[si++ % subjectLogs.length][0], subjectLogs[(si-1) % subjectLogs.length][1]), 7000);
+
+  // 控制趋势图表
+  const coverHistory = Array(24).fill(38);
+  const linkHistory = Array(24).fill(72);
+  function chartPoints(data, W, H, pad) {
+    return data.map((v, i) => {
+      const x = pad + i / (data.length - 1) * (W - pad * 2);
+      const y = H - pad - (v / 100) * (H - pad * 2);
+      return x.toFixed(1) + ',' + y.toFixed(1);
+    });
+  }
+  function drawChart(svgId, data, color) {
+    const svg = document.getElementById(svgId);
+    if (!svg) return;
+    const W = 600, H = 160, pad = 8;
+    const line = chartPoints(data, W, H, pad).join(' ');
+    const area = '0,' + (H - pad) + ' ' + line + ' ' + W + ',' + (H - pad);
+    svg.innerHTML = '<defs><linearGradient id="g-' + svgId + '" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="' + color + '" stop-opacity="0.25"/>' +
+      '<stop offset="100%" stop-color="' + color + '" stop-opacity="0"/></linearGradient></defs>' +
+      '<polygon points="' + area + '" fill="url(#g-' + svgId + ')"/>' +
+      '<polyline points="' + line + '" fill="none" stroke="' + color + '" stroke-width="2" stroke-linejoin="round"/>';
+  }
+  function refreshCharts() {
+    coverHistory.push(cover); coverHistory.shift();
+    linkHistory.push(link); linkHistory.shift();
+    drawChart('chartCover', coverHistory, '#f56c6c');
+    drawChart('chartLink', linkHistory, '#67c23a');
+  }
+  drawChart('chartCover', coverHistory, '#f56c6c');
+  drawChart('chartLink', linkHistory, '#67c23a');
+  setInterval(refreshCharts, 3000);
+
+  // 受控对象列表
+  function renderSubjects() {
+    const s = getSubjectCfg();
+    const rows = [
+      ['NO.007', s.name, '受控中', link + '%', cover + '%', 'green', true],
+      ['NO.003', '王建国', '待机', '45%', '12%', 'blue', false],
+      ['NO.011', '赵铁柱', '已终止', '0%', '0%', 'red', false],
+      ['NO.019', '钱多多', '观察中', '30%', '5%', 'orange', false]
+    ];
+    const statusColor = { '受控中': 'green', '待机': 'blue', '已终止': 'red', '观察中': 'orange' };
+    document.getElementById('subjectsBody').innerHTML = rows.map(r =>
+      '<tr><td>' + r[0] + '</td><td>' + r[1] + '</td>' +
+      '<td><span class="tag ' + statusColor[r[2]] + '">' + r[2] + '</span></td>' +
+      '<td class="mono">' + r[3] + '</td><td class="mono">' + r[4] + '</td>' +
+      '<td>' + (r[6] ? '<a class="mini-btn" data-jump="subject">详情</a>' : '—') + '</td></tr>'
+    ).join('');
+    document.getElementById('subjCount').textContent = '共 ' + rows.length + ' 人';
+  }
+  renderSubjects();
+  setInterval(renderSubjects, 3000);
+  document.getElementById('subjectsBody').addEventListener('click', e => {
+    if (e.target.dataset.jump) {
+      const linkEl = document.querySelector('.menu a[data-view="' + e.target.dataset.jump + '"]');
+      if (linkEl) linkEl.click();
+    }
+  });
+
+  // 任务计划
+  const tasks = [
+    { name: '意识覆盖推进', period: '每 60 秒', enabled: true, last: '' },
+    { name: '脑电波同步校准', period: '每 30 秒', enabled: true, last: '' },
+    { name: '反制信号扫描', period: '每 15 秒', enabled: false, last: '' },
+    { name: '记忆区块巡检', period: '每 120 秒', enabled: true, last: '' }
+  ];
+  function renderTasks() {
+    document.getElementById('taskBody').innerHTML = tasks.map((t, i) =>
+      '<tr><td>' + t.name + '</td><td>' + t.period + '</td>' +
+      '<td><label class="switch"><input type="checkbox" data-task="' + i + '"' + (t.enabled ? ' checked' : '') + '><span class="sl"></span></label></td>' +
+      '<td class="mono">' + (t.last || '—') + '</td>' +
+      '<td><a class="mini-btn" data-run="' + i + '">立即执行</a></td></tr>'
+    ).join('');
+    document.getElementById('taskCount').textContent = tasks.length;
+  }
+  renderTasks();
+  document.getElementById('taskBody').addEventListener('change', e => {
+    if (e.target.dataset.task !== undefined) {
+      const i = +e.target.dataset.task;
+      tasks[i].enabled = e.target.checked;
+      log('定时任务「' + tasks[i].name + '」已' + (e.target.checked ? '启用' : '停用'), 'info');
+    }
+  });
+  document.getElementById('taskBody').addEventListener('click', e => {
+    if (e.target.dataset.run !== undefined) {
+      const i = +e.target.dataset.run;
+      tasks[i].last = new Date().toTimeString().slice(0,8);
+      log('定时任务「' + tasks[i].name + '」已执行', 'ok');
+      audit('执行任务：' + tasks[i].name, true);
+      recordOp();
+      if (tasks[i].name === '意识覆盖推进') setCover(cover + 3);
+      renderTasks();
+    }
+  });
+
+  // 系统信息
+  const bootTime = Date.now();
+  setInterval(() => {
+    const s = Math.floor((Date.now() - bootTime) / 1000);
+    const d = Math.floor(s / 86400), h = Math.floor(s % 86400 / 3600), m = Math.floor(s % 3600 / 60), sec = s % 60;
+    document.getElementById('uptime').textContent = d + ' 天 ' + h + ' 时 ' + m + ' 分 ' + sec + ' 秒';
+  }, 1000);
+  function setRes(vid, bid, v) {
+    document.getElementById(vid).textContent = v + '%';
+    document.getElementById(bid).style.width = v + '%';
+  }
+  setRes('cpuV', 'cpuBar', 23);
+  setRes('memV', 'memBar', 56);
+  setRes('netV', 'netBar', 31);
+  setInterval(() => {
+    setRes('cpuV', 'cpuBar', 15 + Math.floor(Math.random() * 35));
+    setRes('memV', 'memBar', 40 + Math.floor(Math.random() * 25));
+    setRes('netV', 'netBar', 15 + Math.floor(Math.random() * 40));
+  }, 2000);
+
+  // 数据管理（备份 / 导入 / 清除）
+  const CFG_KEYS = ['nc_user','nc_pass','nc_name','nc_avatar','nc_role','nc_subj_name','nc_subj_avatar'];
+  document.getElementById('btnExport').addEventListener('click', () => {
+    const data = {};
+    CFG_KEYS.forEach(k => { data[k] = localStorage.getItem(k); });
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = '脑控操作台-备份-' + new Date().toISOString().slice(0,10) + '.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast('配置已导出');
+    audit('导出配置备份', true);
+  });
+  document.getElementById('btnImport').addEventListener('click', () => document.getElementById('importFile').click());
+  document.getElementById('importFile').addEventListener('change', e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = () => {
+      try {
+        const data = JSON.parse(r.result);
+        Object.keys(data).forEach(k => { if (data[k] !== null && data[k] !== undefined) localStorage.setItem(k, data[k]); });
+        applyName(); applySubject(); fillAccountForm();
+        toast('配置已导入');
+        audit('导入配置备份', true);
+      } catch (err) { toast('导入失败：文件格式错误', '#f56c6c'); }
+    };
+    r.readAsText(f);
+  });
+  document.getElementById('btnClear').addEventListener('click', () => {
+    if (!checkPerm(3, '超级管理员')) return;
+    if (!confirm('确定要清除所有本地数据吗？此操作不可恢复。')) return;
+    audit('清除所有数据', true);
+    localStorage.clear();
+    location.reload();
+  });
+
+  // 预警中心
+  function renderAlerts() {
+    const crit = alertList.filter(a => a.level === '严重').length;
+    const w = alertList.filter(a => a.level === '警告').length;
+    document.getElementById('al-crit').textContent = crit;
+    document.getElementById('al-warn').textContent = w;
+    document.getElementById('al-info').textContent = 0;
+    document.getElementById('al-total').textContent = alertList.length;
+    document.getElementById('alertBody').innerHTML = alertList.map((a, i) =>
+      '<tr><td class="mono">' + a.t + '</td>' +
+      '<td><span class="tag ' + (a.level === '严重' ? 'red' : 'orange') + '">' + a.level + '</span></td>' +
+      '<td>' + a.msg + '</td>' +
+      '<td>' + (a.done ? '<span class="tag green">已处理</span>' : '<span class="tag red">未处理</span>') + '</td>' +
+      '<td><a class="mini-btn" data-done="' + i + '">标记处理</a></td></tr>'
+    ).join('');
+  }
+  document.getElementById('alertBody').addEventListener('click', e => {
+    if (e.target.dataset.done !== undefined) {
+      alertList[+e.target.dataset.done].done = true;
+      renderAlerts();
+      toast('预警已标记为已处理');
+    }
+  });
+  document.getElementById('btnClearAlerts').addEventListener('click', () => {
+    alertList.forEach(a => { a.done = true; });
+    renderAlerts();
+    toast('全部预警已标记为已处理');
+  });
+
+  // 数据统计
+  let opsToday = 0;
+  function recordOp() { opsToday++; renderReport(); }
+  function drawReportBar(data) {
+    const svg = document.getElementById('reportBar');
+    if (!svg) return;
+    const W = 600, H = 180, pad = 30;
+    const max = Math.max.apply(null, data.concat([1]));
+    const bw = (W - pad * 2) / data.length;
+    let s = '';
+    data.forEach((v, i) => {
+      const h = Math.max(2, (v / max) * (H - pad - 24));
+      const x = pad + i * bw + bw * 0.15;
+      const y = H - pad - h;
+      s += '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + (bw * 0.7).toFixed(1) + '" height="' + h.toFixed(1) + '" rx="3" fill="#409eff" opacity="0.85"/>';
+      s += '<text x="' + (x + bw * 0.35).toFixed(1) + '" y="' + (y - 6).toFixed(1) + '" text-anchor="middle" font-size="12" fill="#606266">' + v + '</text>';
+    });
+    svg.innerHTML = s;
+  }
+  function renderReport() {
+    document.getElementById('rp-ops').textContent = opsToday;
+    document.getElementById('rp-alert').textContent = warnCount;
+    document.getElementById('rp-cover').textContent = cover + '%';
+    const days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+    const ops = [12, 18, 9, 24, 15, 30, opsToday];
+    const alerts = [3, 5, 2, 6, 4, 8, warnCount];
+    const covers = [22, 30, 28, 41, 36, 45, cover];
+    drawReportBar(ops);
+    document.getElementById('reportBody').innerHTML = days.map((d, i) =>
+      '<tr><td>' + d + '</td><td>' + ops[i] + '</td><td>' + alerts[i] + '</td><td>' + covers[i] + '%</td><td>' + (i === 6 ? 'BATCH-2026-08' : '—') + '</td></tr>'
+    ).join('');
+  }
+
+  // 实验档案
+  const records = [
+    { id: 'BATCH-2026-08', obj: () => getSubjectCfg().name, type: '深层意识控制', time: '2026-08-23 09:30', status: '进行中', tag: 'green' },
+    { id: 'BATCH-2026-07', obj: '王建国', type: '记忆覆盖实验', time: '2026-08-10 14:00', status: '已完成', tag: 'blue' },
+    { id: 'BATCH-2026-06', obj: '赵铁柱', type: '意识压制测试', time: '2026-07-28 10:15', status: '已终止', tag: 'red' },
+    { id: 'BATCH-2026-05', obj: '钱多多', type: '行为诱导观察', time: '2026-07-12 16:40', status: '已完成', tag: 'blue' }
+  ];
+  function renderRecords() {
+    document.getElementById('recBody').innerHTML = records.map(r =>
+      '<tr><td>' + r.id + '</td><td>' + (typeof r.obj === 'function' ? r.obj() : r.obj) + '</td><td>' + r.type + '</td>' +
+      '<td class="mono">' + r.time + '</td><td><span class="tag ' + r.tag + '">' + r.status + '</span></td>' +
+      '<td><a class="mini-btn" data-view-rec="' + r.id + '">查看</a></td></tr>'
+    ).join('');
+    document.getElementById('recCount').textContent = records.length;
+  }
+  document.getElementById('recBody').addEventListener('click', e => {
+    if (e.target.dataset.viewRec) toast('已打开档案：' + e.target.dataset.viewRec);
+  });
+
+  // 成员管理
+  const defaultMembers = [
+    { user: 'admin', name: '孙笑川博士', role: 'superadmin', enabled: true },
+    { user: 'op001', name: '李四', role: 'admin', enabled: true },
+    { user: 'op002', name: '王五', role: 'operator', enabled: true },
+    { user: 'viewer', name: '赵六', role: 'operator', enabled: false }
+  ];
+  function getMembers() {
+    try { return JSON.parse(localStorage.getItem('nc_members')) || defaultMembers; }
+    catch (e) { return defaultMembers; }
+  }
+  function saveMembers(m) { localStorage.setItem('nc_members', JSON.stringify(m)); }
+  function renderUsers() {
+    const m = getMembers();
+    document.getElementById('userBody').innerHTML = m.map((u, i) => {
+      const r = ROLES[u.role] || ROLES.operator;
+      return '<tr><td>' + u.user + '</td><td>' + u.name + '</td>' +
+        '<td><span class="tag blue">' + r.name + '</span></td>' +
+        '<td><label class="switch"><input type="checkbox" data-mem="' + i + '"' + (u.enabled ? ' checked' : '') + '><span class="sl"></span></label></td>' +
+        '<td><a class="mini-btn" data-del="' + i + '">删除</a></td></tr>';
+    }).join('');
+  }
+  document.getElementById('btnAddUser').addEventListener('click', () => {
+    document.getElementById('addUserForm').style.display = 'block';
+  });
+  document.getElementById('cancelAddUser').addEventListener('click', () => {
+    document.getElementById('addUserForm').style.display = 'none';
+  });
+  document.getElementById('confirmAddUser').addEventListener('click', () => {
+    const u = document.getElementById('newUser').value.trim();
+    const n = document.getElementById('newName').value.trim();
+    if (!u || !n) { toast('账号和姓名不能为空', '#f56c6c'); return; }
+    const m = getMembers();
+    m.push({ user: u, name: n, role: document.getElementById('newRole').value, enabled: true });
+    saveMembers(m);
+    renderUsers();
+    document.getElementById('addUserForm').style.display = 'none';
+    document.getElementById('newUser').value = '';
+    document.getElementById('newName').value = '';
+    audit('添加成员：' + n, true);
+    toast('成员已添加');
+  });
+  document.getElementById('userBody').addEventListener('change', e => {
+    if (e.target.dataset.mem !== undefined) {
+      const i = +e.target.dataset.mem;
+      const m = getMembers();
+      m[i].enabled = e.target.checked;
+      saveMembers(m);
+      log('成员「' + m[i].name + '」已' + (e.target.checked ? '启用' : '停用'), 'info');
+    }
+  });
+  document.getElementById('userBody').addEventListener('click', e => {
+    if (e.target.dataset.del !== undefined) {
+      const i = +e.target.dataset.del;
+      const m = getMembers();
+      if (m[i].role === 'superadmin') { toast('不能删除超级管理员', '#f56c6c'); return; }
+      const name = m[i].name;
+      m.splice(i, 1);
+      saveMembers(m);
+      renderUsers();
+      audit('删除成员：' + name, true);
+      toast('成员已删除');
+    }
+  });
+
+  renderReport();
+  renderAlerts();
+  renderRecords();
+  renderUsers();
+</script>
+</body>
+</html>
+

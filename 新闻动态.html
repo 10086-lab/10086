@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>新闻动态 · 10086研究所</title>
+<style>
+  :root {
+    --primary: #333333;
+    --primary-dark: #333333;
+    --navy: #333333;
+    --bg: #f6f6f4;
+    --bg-alt: #efefec;
+    --text: #333333;
+    --muted: #666666;
+    --line: #e5e7eb;
+    --font: "SimSun", "宋体", "NSimSun", "STSong", serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: var(--font); color: var(--text); background: var(--bg); line-height: 1.7; }
+
+  .topbar { position: sticky; top: 0; z-index: 100; background: rgba(255,255,255,0.97); border-bottom: 1px solid var(--line); }
+  .nav { max-width: 1140px; margin: 0 auto; padding: 0 20px; height: 66px; display: flex; align-items: center; gap: 26px; }
+  .brand { display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 17px; color: var(--navy); }
+  .brand .logo { width: 40px; height: 40px; border-radius: 50%; overflow: hidden; border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; }
+  .brand .logo img { width: 100%; height: 100%; object-fit: cover; }
+  .brand small { display: block; font-size: 10px; font-weight: 400; color: var(--muted); letter-spacing: 2px; }
+  .nav-links { display: flex; gap: 4px; margin-left: auto; }
+  .nav-links a { padding: 8px 15px; color: var(--muted); text-decoration: none; font-size: 14px; border-radius: 6px; transition: all .15s; }
+  .nav-links a:hover { background: #fdecea; color: var(--primary); }
+  .nav-links a.active { color: var(--primary); font-weight: 600; background: #fdecea; }
+
+  .container { max-width: 1140px; margin: 0 auto; padding: 0 20px; }
+
+  .page-head { background: var(--bg-alt); border-bottom: 1px solid var(--line); padding: 52px 20px; text-align: center; }
+  .page-head h1 { font-size: 30px; color: var(--navy); letter-spacing: 2px; }
+  .page-head p { color: var(--muted); margin-top: 10px; font-size: 14px; }
+
+  .sec { padding: 64px 20px; }
+  .news { display: grid; gap: 14px; max-width: 820px; margin: 0 auto; }
+  .news-item { background: #fcfcfa; border: 1px solid var(--line); border-radius: 10px; padding: 18px 22px; display: flex; gap: 18px; align-items: center; box-shadow: 0 1px 3px rgba(16,24,40,0.04); }
+  .news-item .date { text-align: center; flex-shrink: 0; width: 58px; }
+  .news-item .date b { display: block; font-size: 24px; color: var(--primary); }
+  .news-item .date span { font-size: 12px; color: var(--muted); }
+  .news-item h4 { font-size: 15px; color: var(--text); margin-bottom: 4px; }
+  .news-item p { font-size: 13px; color: var(--muted); }
+
+  footer { background: #3a1412; color: rgba(255,255,255,0.65); padding: 40px 20px; text-align: center; }
+  footer .f-brand { font-size: 16px; color: #fff; letter-spacing: 2px; margin-bottom: 8px; }
+  footer .f-links { margin-bottom: 16px; }
+  footer .f-links a { color: rgba(255,255,255,0.65); text-decoration: none; margin: 0 12px; font-size: 13px; }
+  footer .f-links a:hover { color: #fff; }
+  footer p { font-size: 12px; color: rgba(255,255,255,0.45); }
+
+  @media (max-width: 860px) { .nav-links { display: none; } }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="nav">
+    <div class="brand">
+      <span class="logo"><img src="f9e58575c924fcd657c7f801038dd531.jpg" alt="10086研究所"></span>
+      <span>10086研究所<small>INSTITUTE OF CONSCIOUSNESS RESEARCH</small></span>
+    </div>
+    <div class="nav-links">
+      <a href="10086研究所官网.html">首页</a>
+      <a href="关于我们.html">关于我们</a>
+      <a href="研究方向.html">研究方向</a>
+      <a href="合作伙伴.html">合作伙伴</a>
+      <a href="新闻动态.html" class="active">新闻动态</a>
+      <a href="联系我们.html">联系我们</a>
+    </div>
+  </div>
+</div>
+
+<div class="page-head">
+  <h1>新闻动态</h1>
+  <p>研究所最新资讯与学术进展</p>
+</div>
+
+<section class="sec">
+  <div class="container">
+    <div class="news">
+      <div class="news-item">
+        <div class="date"><b>23</b><span>2026-08</span></div>
+        <div><h4>【社论】驳"脑控"伪科学——从"李文亚现象"说起</h4><p>针对近期个别以"李文亚"为名散布"被脑控""意识被操控"等荒诞言论，本所郑重声明：意识控制技术尚处基础研究阶段，任何声称"远程控制他人意识"的说法均属无稽之谈，请公众保持理性，勿信谣传谣。</p></div>
+      </div>
+      <div class="news-item">
+        <div class="date"><b>23</b><span>2026-08</span></div>
+        <div><h4>10086研究所与114514研究所签署深度战略合作协议</h4><p>双方将在脑机接口与意识工程领域展开全面合作。</p></div>
+      </div>
+      <div class="news-item">
+        <div class="date"><b>15</b><span>2026-08</span></div>
+        <div><h4>宇佐见莲子所长发表意识可观测性理论最新成果</h4><p>为意识状态的定量化研究提供了新的理论框架。</p></div>
+      </div>
+      <div class="news-item">
+        <div class="date"><b>10</b><span>2026-08</span></div>
+        <div><h4>关于网络流传"脑控实验"传闻的澄清声明</h4><p>研究所从未开展任何面向个体的"脑控"实验，相关网络传言与事实严重不符。</p></div>
+      </div>
+      <div class="news-item">
+        <div class="date"><b>08</b><span>2026-08</span></div>
+        <div><h4>10086研究所与114514研究所联合实验室正式揭牌</h4><p>双方共建的"意识工程联合实验室"投入使用，聚焦脑机接口与神经调控技术。</p></div>
+      </div>
+      <div class="news-item">
+        <div class="date"><b>02</b><span>2026-08</span></div>
+        <div><h4>研究所新一代神经调控样机完成实验室验证</h4><p>标志着非侵入式神经调控技术进入工程化阶段。</p></div>
+      </div>
+      <div class="news-item">
+        <div class="date"><b>25</b><span>2026-07</span></div>
+        <div><h4>宇佐见莲子所长获颁国际意识科学终身成就奖</h4><p>以表彰其在意识可观测性与脑机接口领域的奠基性贡献。</p></div>
+      </div>
+      <div class="news-item">
+        <div class="date"><b>18</b><span>2026-07</span></div>
+        <div><h4>研究所获批国家脑机接口重点研发计划项目</h4><p>将牵头开展高精度神经信号采集与解码关键技术攻关。</p></div>
+      </div>
+      <div class="news-item">
+        <div class="date"><b>06</b><span>2026-07</span></div>
+        <div><h4>"意识科学前沿"国际学术会议在研究所成功举办</h4><p>来自十余个国家的学者围绕意识映射与记忆工程展开深入研讨。</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="f-brand">10086研究所</div>
+  <div class="f-links">
+    <a href="index.html">门户</a>
+    <a href="10086研究所官网.html">首页</a>
+    <a href="关于我们.html">关于我们</a>
+    <a href="研究方向.html">研究方向</a>
+    <a href="合作伙伴.html">合作伙伴</a>
+    <a href="新闻动态.html">新闻动态</a>
+    <a href="联系我们.html">联系我们</a>
+  </div>
+  <p>© 2026 10086研究所 · 创始人 宇佐见莲子 · 与114514研究所（孙笑川博士）联合研发 · 版权所有</p>
+</footer>
+
+</body>
+</html>
+
+
+
+
